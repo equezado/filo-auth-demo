@@ -25,7 +25,7 @@ export default function Intro() {
   }
 
   const handleStart = () => {
-    router.push('/dashboard')
+    router.push('/categories')
   }
 
   if (loading) {
