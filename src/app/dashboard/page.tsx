@@ -23,6 +23,8 @@ export default function Dashboard() {
     }
   }
 
+  const firstName = (user?.user_metadata as any)?.first_name || (user?.user_metadata as any)?.firstName || ''
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -40,7 +42,7 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
-            Welcome to Filo! 🎉
+            {firstName ? `Welcome to Filo, ${firstName}! 🎉` : 'Welcome to Filo! 🎉'}
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
             You&apos;ve successfully signed in to your account. This is your protected dashboard.
