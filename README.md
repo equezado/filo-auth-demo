@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Filo - Authentication Proof of Concept
 
-## Getting Started
+A simple, modern authentication system built with Next.js 14, Supabase, and Tailwind CSS.
 
-First, run the development server:
+## Features
+
+- ✅ User registration and login
+- ✅ Protected routes
+- ✅ Responsive design with Tailwind CSS
+- ✅ TypeScript support
+- ✅ Modern Next.js 14 App Router
+- ✅ Supabase authentication backend
+
+## Tech Stack
+
+- **Frontend**: Next.js 14 with App Router
+- **Styling**: Tailwind CSS
+- **Authentication**: Supabase Auth
+- **Database**: Supabase (PostgreSQL)
+- **Language**: TypeScript
+- **Deployment**: Vercel (recommended)
+
+## Quick Start
+
+### 1. Clone and Install
+
+```bash
+git clone <your-repo-url>
+cd filo
+npm install
+```
+
+### 2. Set up Supabase
+
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Once created, go to Settings → API
+3. Copy your project URL and anon key
+
+### 3. Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# NextAuth Configuration (optional for this demo)
+NEXTAUTH_SECRET=your_nextauth_secret_key_here
+NEXTAUTH_URL=http://localhost:3000
+```
+
+### 4. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── dashboard/         # Protected dashboard page
+│   ├── signin/           # Sign-in page
+│   ├── signup/           # Sign-up page
+│   ├── layout.tsx        # Root layout with AuthProvider
+│   └── page.tsx          # Home page with redirects
+├── contexts/
+│   └── AuthContext.tsx   # Authentication context
+└── lib/
+    └── supabase.ts       # Supabase client configuration
+```
 
-## Learn More
+## Authentication Flow
 
-To learn more about Next.js, take a look at the following resources:
+1. **Home Page** (`/`) - Redirects based on auth status
+2. **Sign Up** (`/signup`) - Create new account
+3. **Sign In** (`/signin`) - Login to existing account
+4. **Dashboard** (`/dashboard`) - Protected welcome screen
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Deploy to Vercel (Recommended)
 
-## Deploy on Vercel
+1. Push your code to GitHub
+2. Connect your repository to [Vercel](https://vercel.com)
+3. Add your environment variables in Vercel dashboard
+4. Deploy!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Environment Variables for Production
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Make sure to set these in your production environment:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL` (your production domain)
+
+## Customization
+
+### Adding New Protected Routes
+
+1. Create a new page in `src/app/`
+2. Use the `useAuth()` hook to check authentication
+3. Redirect unauthenticated users to `/signin`
+
+### Styling
+
+The app uses Tailwind CSS. You can customize colors, spacing, and components in `tailwind.config.js`.
+
+## Security Features
+
+- Password validation (minimum 6 characters)
+- Protected routes with automatic redirects
+- Secure session management
+- CSRF protection via Supabase
+
+## Next Steps
+
+This is a basic proof of concept. Consider adding:
+
+- Email verification
+- Password reset functionality
+- Social authentication (Google, GitHub)
+- User profile management
+- Role-based access control
+- Database tables for user data
+
+## Support
+
+For issues or questions:
+1. Check Supabase documentation
+2. Review Next.js documentation
+3. Check the browser console for errors
+
+## License
+
+MIT License - feel free to use this code for your projects!
