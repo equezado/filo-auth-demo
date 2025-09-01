@@ -34,6 +34,8 @@ export default function Dashboard() {
     fetchUserPreferences()
   }, [user])
 
+
+
   const handleSignOut = async () => {
     try {
       await signOut()

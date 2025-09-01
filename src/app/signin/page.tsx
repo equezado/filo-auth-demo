@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { hasUserCompletedOnboarding } from '@/lib/userPreferences'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -20,6 +21,8 @@ export default function SignIn() {
 
     try {
       await signIn(email, password)
+      // After successful sign-in, redirect to intro page
+      // The intro page will check if user has completed onboarding
       router.push('/intro')
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign in'

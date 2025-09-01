@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { saveUserPreferences } from '@/lib/userPreferences'
+import { saveUserPreferences, hasUserCompletedOnboarding } from '@/lib/userPreferences'
 
 interface Category {
   id: string
@@ -53,6 +53,8 @@ export default function Categories() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [checkingOnboarding, setCheckingOnboarding] = useState(false)
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -61,6 +63,28 @@ export default function Categories() {
       router.push('/signin')
     }
   }, [user, authLoading, router])
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (user && !checkingOnboarding && !hasCheckedOnboarding) {
+        setCheckingOnboarding(true)
+        try {
+          const hasCompletedOnboarding = await hasUserCompletedOnboarding(user.id)
+          if (hasCompletedOnboarding) {
+            // User has already completed onboarding, redirect to dashboard
+            router.push('/dashboard')
+          }
+        } catch (error) {
+          console.error('Error checking onboarding status:', error)
+        } finally {
+          setCheckingOnboarding(false)
+          setHasCheckedOnboarding(true)
+        }
+      }
+    }
+
+    checkOnboardingStatus()
+  }, [user, checkingOnboarding, hasCheckedOnboarding, router])
 
   const handleCategoryToggle = (categoryId: string) => {
     setSelectedCategories(prev => {
@@ -98,7 +122,7 @@ export default function Categories() {
     }
   }
 
-  if (authLoading) {
+  if (authLoading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading...</div>

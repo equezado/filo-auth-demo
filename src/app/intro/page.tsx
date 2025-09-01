@@ -2,17 +2,42 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { hasUserCompletedOnboarding } from '@/lib/userPreferences'
 
 export default function Intro() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const [checkingOnboarding, setCheckingOnboarding] = useState(false)
+  const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/signin')
     }
   }, [user, loading, router])
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (user && !checkingOnboarding && !hasCheckedOnboarding) {
+        setCheckingOnboarding(true)
+        try {
+          const hasCompletedOnboarding = await hasUserCompletedOnboarding(user.id)
+          if (hasCompletedOnboarding) {
+            // User has already completed onboarding, redirect to dashboard
+            router.push('/dashboard')
+          }
+        } catch (error) {
+          console.error('Error checking onboarding status:', error)
+        } finally {
+          setCheckingOnboarding(false)
+          setHasCheckedOnboarding(true)
+        }
+      }
+    }
+
+    checkOnboardingStatus()
+  }, [user, checkingOnboarding, hasCheckedOnboarding, router])
 
   let firstName = ''
   const metadataRaw = user?.user_metadata
@@ -28,7 +53,7 @@ export default function Intro() {
     router.push('/categories')
   }
 
-  if (loading) {
+  if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading...</div>
