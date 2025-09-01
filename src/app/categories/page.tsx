@@ -110,7 +110,10 @@ export default function Categories() {
 
     try {
       // Save user preferences using the utility function
-      await saveUserPreferences(user?.id!, selectedCategories)
+      if (!user?.id) {
+        throw new Error('User ID not available')
+      }
+      await saveUserPreferences(user.id, selectedCategories)
 
       // Redirect to dashboard
       router.push('/dashboard')
