@@ -23,7 +23,15 @@ export default function Dashboard() {
     }
   }
 
-  const firstName = (user?.user_metadata as any)?.first_name || (user?.user_metadata as any)?.firstName || ''
+  let firstName = ''
+  const metadataRaw = user?.user_metadata
+  if (metadataRaw && typeof metadataRaw === 'object') {
+    const metadata = metadataRaw as Record<string, unknown>
+    const candidate = (metadata['first_name'] ?? metadata['firstName'])
+    if (typeof candidate === 'string') {
+      firstName = candidate
+    }
+  }
 
   if (loading) {
     return (
