@@ -71,8 +71,8 @@ export default function Categories() {
         try {
           const hasCompletedOnboarding = await hasUserCompletedOnboarding(user.id)
           if (hasCompletedOnboarding) {
-            // User has already completed onboarding, redirect to dashboard
-            router.push('/dashboard')
+            // User has already completed onboarding, redirect to feeds
+            router.push('/feeds')
           }
         } catch (error) {
           console.error('Error checking onboarding status:', error)
@@ -115,8 +115,8 @@ export default function Categories() {
       }
       await saveUserPreferences(user.id, selectedCategories)
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Redirect to feeds
+      router.push('/feeds')
     } catch (err) {
       console.error('Error saving preferences:', err)
       setError('Failed to save preferences. Please try again.')

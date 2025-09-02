@@ -46,6 +46,12 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
 }
 
 export async function hasUserCompletedOnboarding(userId: string): Promise<boolean> {
-  const preferences = await getUserPreferences(userId)
-  return preferences !== null && preferences.selected_categories.length === 2
+  try {
+    const preferences = await getUserPreferences(userId)
+    console.log('Onboarding check - User ID:', userId, 'Preferences:', preferences)
+    return preferences !== null && preferences.selected_categories.length >= 1
+  } catch (error) {
+    console.error('Error checking onboarding status:', error)
+    return false
+  }
 }

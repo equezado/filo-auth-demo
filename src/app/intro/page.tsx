@@ -10,6 +10,7 @@ export default function Intro() {
   const router = useRouter()
   const [checkingOnboarding, setCheckingOnboarding] = useState(false)
   const [hasCheckedOnboarding, setHasCheckedOnboarding] = useState(false)
+  const [onboardingError, setOnboardingError] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -20,15 +21,30 @@ export default function Intro() {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (user && !checkingOnboarding && !hasCheckedOnboarding) {
+        console.log('Checking onboarding status for user:', user.id)
         setCheckingOnboarding(true)
+        
+        // Add a timeout to prevent infinite loading
+        const timeout = setTimeout(() => {
+          console.log('Onboarding check timeout - proceeding to categories')
+          setCheckingOnboarding(false)
+          setHasCheckedOnboarding(true)
+        }, 5000) // 5 second timeout
+        
         try {
           const hasCompletedOnboarding = await hasUserCompletedOnboarding(user.id)
+          console.log('Onboarding completed:', hasCompletedOnboarding)
+          clearTimeout(timeout)
+          
           if (hasCompletedOnboarding) {
-            // User has already completed onboarding, redirect to dashboard
-            router.push('/dashboard')
+            // User has already completed onboarding, redirect to feeds
+            console.log('Redirecting to feeds...')
+            router.push('/feeds')
           }
         } catch (error) {
           console.error('Error checking onboarding status:', error)
+          clearTimeout(timeout)
+          setOnboardingError(true)
         } finally {
           setCheckingOnboarding(false)
           setHasCheckedOnboarding(true)
@@ -56,7 +72,20 @@ export default function Intro() {
   if (loading || checkingOnboarding) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="text-xl mb-4">Loading...</div>
+          {onboardingError && (
+            <div className="text-red-600 text-sm">
+              Error checking onboarding status. 
+              <button 
+                onClick={() => router.push('/categories')}
+                className="ml-2 text-indigo-600 hover:text-indigo-500 underline"
+              >
+                Continue to categories
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -77,13 +106,37 @@ export default function Intro() {
           </p>
         </div>
 
-        <div className="mt-12">
+        <div className="mt-12 space-y-4">
           <button
             onClick={handleStart}
             className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
           >
             Start
           </button>
+          
+          <div className="text-sm text-gray-500">
+            Having issues? Try these direct links:
+            <div className="mt-2 space-x-4">
+              <button
+                onClick={() => router.push('/categories')}
+                className="text-indigo-600 hover:text-indigo-500 underline"
+              >
+                Go to Categories
+              </button>
+              <button
+                onClick={() => router.push('/feeds')}
+                className="text-indigo-600 hover:text-indigo-500 underline"
+              >
+                Go to Feeds
+              </button>
+              <button
+                onClick={() => router.push('/debug')}
+                className="text-gray-500 hover:text-gray-400 underline"
+              >
+                Debug
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
