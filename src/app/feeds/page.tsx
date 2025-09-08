@@ -27,7 +27,7 @@ const categoryNames: Record<string, string> = {
   'financial-wellbeing': 'Financial well-being',
   'career-development': 'Career & development',
   'relationships': 'Relationships',
-  'nutrition-lifestyle': 'Nutrition & lifestyle'
+  'nutrition-lifestyle': 'Dieta e nutrição'
 }
 
 export default function Feeds() {
