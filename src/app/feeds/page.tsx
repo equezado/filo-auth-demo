@@ -36,7 +36,6 @@ export default function Feeds() {
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loadingPosts, setLoadingPosts] = useState(true)
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [preferencesLoading, setPreferencesLoading] = useState(true)
 
   useEffect(() => {
@@ -51,9 +50,6 @@ export default function Feeds() {
         try {
           const preferences = await getUserPreferences(user.id)
           setUserPreferences(preferences)
-          if (preferences && preferences.selected_categories.length > 0) {
-            setSelectedCategory(preferences.selected_categories[0])
-          }
         } catch (error) {
           console.error('Error fetching user preferences:', error)
         } finally {
@@ -74,12 +70,12 @@ export default function Feeds() {
 
       try {
         const supabase = createClient()
-        const categoryFilter = selectedCategory || userPreferences.selected_categories[0]
         
+        // Fetch posts from all user-selected categories
         const { data, error } = await supabase
           .from('posts')
           .select('*')
-          .eq('category_id', categoryFilter)
+          .in('category_id', userPreferences.selected_categories)
           .order('created_at', { ascending: false })
 
         if (error) {
@@ -97,7 +93,7 @@ export default function Feeds() {
     if (!preferencesLoading) {
       fetchPosts()
     }
-  }, [userPreferences, selectedCategory, preferencesLoading])
+  }, [userPreferences, preferencesLoading])
 
   const handleSignOut = async () => {
     try {
@@ -108,9 +104,6 @@ export default function Feeds() {
     }
   }
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId)
-  }
 
   if (loading || preferencesLoading) {
     return (
@@ -149,7 +142,7 @@ export default function Feeds() {
           <div className="flex justify-between items-center py-8">
             <div>
               <h1 className="apple-text-large text-[var(--foreground)] mb-2">Your Feeds</h1>
-              <p className="apple-text-caption text-[var(--secondary)]">Personalized content based on your interests</p>
+              <p className="apple-text-caption text-[var(--secondary)]">All posts from your selected categories, ordered by date</p>
             </div>
             <button
               onClick={handleSignOut}
@@ -162,24 +155,6 @@ export default function Feeds() {
       </div>
 
       <div className="max-w-7xl mx-auto py-12 px-6 sm:px-8 lg:px-12">
-        {/* Category Filter */}
-        <div className="mb-12">
-          <div className="flex flex-wrap gap-3">
-            {userPreferences.selected_categories.map((categoryId) => (
-              <button
-                key={categoryId}
-                onClick={() => handleCategoryChange(categoryId)}
-                className={`px-6 py-3 rounded-full apple-text-small font-medium transition-all duration-200 ${
-                  selectedCategory === categoryId
-                    ? 'bg-[var(--accent)] text-white shadow-lg'
-                    : 'bg-[var(--tertiary)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--border)] hover:shadow-md'
-                }`}
-              >
-                {categoryNames[categoryId] || categoryId}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Posts Grid */}
         {loadingPosts ? (
@@ -188,7 +163,7 @@ export default function Feeds() {
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-16">
-            <div className="apple-text-medium text-[var(--secondary)]">No posts found for this category.</div>
+            <div className="apple-text-medium text-[var(--secondary)]">No posts found in your selected categories.</div>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 max-w-[720px] mx-auto">
