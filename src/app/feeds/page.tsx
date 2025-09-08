@@ -114,8 +114,8 @@ export default function Feeds() {
 
   if (loading || preferencesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
+        <div className="apple-text-medium text-[var(--secondary)]">Loading...</div>
       </div>
     )
   }
@@ -126,13 +126,13 @@ export default function Feeds() {
 
   if (!userPreferences || userPreferences.selected_categories.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">No Categories Selected</h1>
-          <p className="text-gray-600 mb-6">Please select your preferred categories to see personalized feeds.</p>
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <h1 className="apple-text-large text-[var(--foreground)] mb-4">No Categories Selected</h1>
+          <p className="apple-text-small text-[var(--secondary)] mb-8">Please select your preferred categories to see personalized feeds.</p>
           <button
             onClick={() => router.push('/categories')}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            className="apple-button"
           >
             Select Categories
           </button>
@@ -142,18 +142,18 @@ export default function Feeds() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+      <div className="bg-[var(--background)] border-b border-[var(--border)]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="flex justify-between items-center py-8">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Your Feeds</h1>
-              <p className="text-sm text-gray-600">Personalized content based on your interests</p>
+              <h1 className="apple-text-large text-[var(--foreground)] mb-2">Your Feeds</h1>
+              <p className="apple-text-caption text-[var(--secondary)]">Personalized content based on your interests</p>
             </div>
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              className="apple-button-secondary"
             >
               Sign Out
             </button>
@@ -161,18 +161,18 @@ export default function Feeds() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-12 px-6 sm:px-8 lg:px-12">
         {/* Category Filter */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
+        <div className="mb-12">
+          <div className="flex flex-wrap gap-3">
             {userPreferences.selected_categories.map((categoryId) => (
               <button
                 key={categoryId}
                 onClick={() => handleCategoryChange(categoryId)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`px-6 py-3 rounded-full apple-text-small font-medium transition-all duration-200 ${
                   selectedCategory === categoryId
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-[var(--accent)] text-white shadow-lg'
+                    : 'bg-[var(--tertiary)] text-[var(--foreground)] border border-[var(--border)] hover:bg-[var(--border)] hover:shadow-md'
                 }`}
               >
                 {categoryNames[categoryId] || categoryId}
@@ -183,24 +183,24 @@ export default function Feeds() {
 
         {/* Posts Grid */}
         {loadingPosts ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-lg text-gray-600">Loading posts...</div>
+          <div className="flex items-center justify-center py-16">
+            <div className="apple-text-medium text-[var(--secondary)]">Loading posts...</div>
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-lg text-gray-600">No posts found for this category.</div>
+          <div className="text-center py-16">
+            <div className="apple-text-medium text-[var(--secondary)]">No posts found for this category.</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-8 max-w-[720px] mx-auto">
             {posts.map((post) => (
-              <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+              <div key={post.id} className="apple-card overflow-hidden group cursor-pointer">
                 {/* Thumbnail */}
-                <div className="aspect-video bg-gray-200 relative">
+                <div className="aspect-video bg-[var(--tertiary)] relative overflow-hidden">
                   <Image
                     src={post.thumbnail_url}
                     alt={post.title}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       target.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop'
@@ -209,10 +209,10 @@ export default function Feeds() {
                 </div>
                 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-8">
                   {/* Author Info */}
-                  <div className="flex items-center mb-3">
-                    <div className="w-8 h-8 rounded-full mr-3 relative overflow-hidden">
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 rounded-full mr-4 relative overflow-hidden border border-[var(--border)]">
                       <Image
                         src={post.author_avatar}
                         alt={post.author_name}
@@ -224,25 +224,25 @@ export default function Feeds() {
                         }}
                       />
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{post.author_name}</span>
+                    <span className="apple-text-small font-medium text-[var(--foreground)]">{post.author_name}</span>
                   </div>
                   
                   {/* Title */}
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                  <h3 className="apple-text-medium font-semibold text-[var(--foreground)] mb-3 line-clamp-2 leading-tight">
                     {post.title}
                   </h3>
                   
                   {/* Content Preview */}
-                  <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                  <p className="apple-text-small text-[var(--secondary)] line-clamp-3 mb-6 leading-relaxed">
                     {post.content}
                   </p>
                   
-                  {/* Category Badge */}
+                  {/* Category Badge and Date */}
                   <div className="flex items-center justify-between">
-                    <span className="inline-block bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+                    <span className="inline-block bg-[var(--tertiary)] text-[var(--accent)] apple-text-caption px-3 py-1.5 rounded-full font-medium">
                       {categoryNames[post.category_id] || post.category_id}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="apple-text-caption text-[var(--secondary)]">
                       {new Date(post.created_at).toLocaleDateString()}
                     </span>
                   </div>
