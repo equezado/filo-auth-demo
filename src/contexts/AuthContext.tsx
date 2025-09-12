@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase'
 
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   // Function to fetch user role with retry logic
-  const fetchUserRole = async (userId: string, retries = 3): Promise<UserRole | null> => {
+  const fetchUserRole = useCallback(async (userId: string, retries = 3): Promise<UserRole | null> => {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         const { data, error } = await supabase
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     return null
-  }
+  }, [supabase])
 
   useEffect(() => {
     // Get initial session
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, fetchUserRole])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({

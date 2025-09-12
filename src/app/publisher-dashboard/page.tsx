@@ -202,7 +202,7 @@ export default function PublisherDashboard() {
             </div>
           ) : posts.length === 0 ? (
             <div className="text-center py-16">
-              <div className="apple-text-medium text-[var(--secondary)] mb-4">You haven't created any posts yet.</div>
+              <div className="apple-text-medium text-[var(--secondary)] mb-4">You haven&apos;t created any posts yet.</div>
               <button
                 onClick={() => router.push('/create-post')}
                 className="apple-button"
