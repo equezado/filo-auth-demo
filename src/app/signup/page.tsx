@@ -13,6 +13,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
+  const [role, setRole] = useState<'reader' | 'publisher'>('reader')
   const { signUp } = useAuth()
   const router = useRouter()
 
@@ -38,7 +39,11 @@ export default function SignUp() {
     setLoading(true)
 
     try {
-      await signUp(email, password, { firstName: firstName.trim(), lastName: lastName.trim() })
+      await signUp(email, password, { 
+        firstName: firstName.trim(), 
+        lastName: lastName.trim(), 
+        role: role 
+      })
       // Show success message and redirect to sign in
       alert('Account created successfully! Please check your email to verify your account.')
       router.push('/signin')
@@ -140,11 +145,27 @@ export default function SignUp() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
+            </div>
+            <div>
+              <label htmlFor="role" className="sr-only">
+                Account Type
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                value={role}
+                onChange={(e) => setRole(e.target.value as 'reader' | 'publisher')}
+              >
+                <option value="reader">Reader - View and read posts</option>
+                <option value="publisher">Publisher - Create and manage posts</option>
+              </select>
             </div>
           </div>
 
