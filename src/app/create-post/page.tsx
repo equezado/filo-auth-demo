@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase'
+import AuthorSelector from '@/components/AuthorSelector'
+import AddAuthorModal from '@/components/AddAuthorModal'
+import { Author } from '@/types/author'
 
 interface Category {
   id: string
@@ -29,10 +32,10 @@ export default function CreatePost() {
     title: '',
     content: '',
     category_id: '',
-    author_name: '',
-    author_avatar: '',
     thumbnail_url: ''
   })
+  const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null)
+  const [showAddAuthorModal, setShowAddAuthorModal] = useState(false)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -128,6 +131,10 @@ export default function CreatePost() {
         throw new Error('User not authenticated')
       }
 
+      if (!selectedAuthor) {
+        throw new Error('Please select an author')
+      }
+
       const supabase = createClient()
       
       let thumbnailUrl = formData.thumbnail_url
@@ -160,10 +167,11 @@ export default function CreatePost() {
           title: formData.title,
           content: formData.content,
           category_id: formData.category_id,
-          author_name: formData.author_name,
-          author_avatar: formData.author_avatar,
+          author_name: selectedAuthor.name,
+          author_avatar: selectedAuthor.avatar_url,
+          author_id: selectedAuthor.id,
           thumbnail_url: thumbnailUrl,
-          author_id: user.id
+          publisher_id: user.id
         })
 
       if (error) {
@@ -175,10 +183,9 @@ export default function CreatePost() {
         title: '',
         content: '',
         category_id: '',
-        author_name: '',
-        author_avatar: '',
         thumbnail_url: ''
       })
+      setSelectedAuthor(null)
       setThumbnailFile(null)
       setThumbnailPreview(null)
 
@@ -190,6 +197,19 @@ export default function CreatePost() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleAuthorSelect = (author: Author | null) => {
+    setSelectedAuthor(author)
+  }
+
+  const handleAddNewAuthor = () => {
+    setShowAddAuthorModal(true)
+  }
+
+  const handleAuthorCreated = (author: Author) => {
+    setSelectedAuthor(author)
+    setShowAddAuthorModal(false)
   }
 
   const handleSignOut = async () => {
@@ -298,38 +318,13 @@ export default function CreatePost() {
               </select>
             </div>
 
-            {/* Author Name */}
-            <div>
-              <label htmlFor="author_name" className="block apple-text-small font-medium text-[var(--foreground)] mb-2">
-                Author Name *
-              </label>
-              <input
-                type="text"
-                id="author_name"
-                name="author_name"
-                value={formData.author_name}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                placeholder="Your name as it should appear"
-              />
-            </div>
-
-            {/* Author Avatar URL */}
-            <div>
-              <label htmlFor="author_avatar" className="block apple-text-small font-medium text-[var(--foreground)] mb-2">
-                Author Avatar URL
-              </label>
-              <input
-                type="url"
-                id="author_avatar"
-                name="author_avatar"
-                value={formData.author_avatar}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                placeholder="https://example.com/your-avatar.jpg"
-              />
-            </div>
+            {/* Author Selection */}
+            <AuthorSelector
+              selectedAuthor={selectedAuthor}
+              onAuthorSelect={handleAuthorSelect}
+              onAddNewAuthor={handleAddNewAuthor}
+              disabled={isSubmitting}
+            />
 
             {/* Thumbnail Upload */}
             <div>
@@ -414,6 +409,13 @@ export default function CreatePost() {
           </form>
         </div>
       </div>
+
+      {/* Add Author Modal */}
+      <AddAuthorModal
+        isOpen={showAddAuthorModal}
+        onClose={() => setShowAddAuthorModal(false)}
+        onAuthorCreated={handleAuthorCreated}
+      />
     </div>
   )
 }
