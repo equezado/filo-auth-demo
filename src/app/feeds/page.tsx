@@ -303,16 +303,29 @@ export default function Feeds() {
               <div key={post.id} className="apple-card overflow-hidden group cursor-pointer">
                 {/* Thumbnail */}
                 <div className="aspect-video bg-[var(--tertiary)] relative overflow-hidden">
-                  <Image
-                    src={post.thumbnail_url}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop'
-                    }}
-                  />
+                  {post.thumbnail_url && post.thumbnail_url.trim() !== '' ? (
+                    <Image
+                      src={post.thumbnail_url}
+                      alt={post.title}
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=250&fit=crop'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-[var(--tertiary)]">
+                      <div className="text-center">
+                        <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-[var(--border)] flex items-center justify-center">
+                          <svg className="w-8 h-8 text-[var(--secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <p className="apple-text-caption text-[var(--secondary)]">No image</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Content */}
@@ -320,16 +333,24 @@ export default function Feeds() {
                   {/* Author Info */}
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-full mr-4 relative overflow-hidden border border-[var(--border)]">
-                      <Image
-                        src={post.author_avatar}
-                        alt={post.author_name}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-                        }}
-                      />
+                      {post.author_avatar && post.author_avatar.trim() !== '' ? (
+                        <Image
+                          src={post.author_avatar}
+                          alt={post.author_name}
+                          fill
+                          className="object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[var(--tertiary)] flex items-center justify-center">
+                          <svg className="w-6 h-6 text-[var(--secondary)]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
                     <span className="apple-text-small font-medium text-[var(--foreground)]">{post.author_name}</span>
                   </div>
