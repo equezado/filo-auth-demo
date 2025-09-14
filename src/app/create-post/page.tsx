@@ -33,6 +33,8 @@ export default function CreatePost() {
     author_avatar: '',
     thumbnail_url: ''
   })
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -80,6 +82,42 @@ export default function CreatePost() {
     }))
   }
 
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file')
+        return
+      }
+
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size must be less than 5MB')
+        return
+      }
+
+      setThumbnailFile(file)
+      setError('')
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setThumbnailPreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeThumbnail = () => {
+    setThumbnailFile(null)
+    setThumbnailPreview(null)
+    setFormData(prev => ({
+      ...prev,
+      thumbnail_url: ''
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -92,6 +130,30 @@ export default function CreatePost() {
 
       const supabase = createClient()
       
+      let thumbnailUrl = formData.thumbnail_url
+
+      // Upload thumbnail file if provided
+      if (thumbnailFile) {
+        const fileExt = thumbnailFile.name.split('.').pop()
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`
+        const filePath = `thumbnails/${fileName}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('post-images')
+          .upload(filePath, thumbnailFile)
+
+        if (uploadError) {
+          throw new Error(`Failed to upload image: ${uploadError.message}`)
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(filePath)
+
+        thumbnailUrl = publicUrl
+      }
+      
       const { error } = await supabase
         .from('posts')
         .insert({
@@ -100,7 +162,7 @@ export default function CreatePost() {
           category_id: formData.category_id,
           author_name: formData.author_name,
           author_avatar: formData.author_avatar,
-          thumbnail_url: formData.thumbnail_url,
+          thumbnail_url: thumbnailUrl,
           author_id: user.id
         })
 
@@ -117,6 +179,8 @@ export default function CreatePost() {
         author_avatar: '',
         thumbnail_url: ''
       })
+      setThumbnailFile(null)
+      setThumbnailPreview(null)
 
       // Redirect to feeds
       router.push('/feeds')
@@ -267,20 +331,67 @@ export default function CreatePost() {
               />
             </div>
 
-            {/* Thumbnail URL */}
+            {/* Thumbnail Upload */}
             <div>
-              <label htmlFor="thumbnail_url" className="block apple-text-small font-medium text-[var(--foreground)] mb-2">
-                Thumbnail Image URL
+              <label htmlFor="thumbnail" className="block apple-text-small font-medium text-[var(--foreground)] mb-2">
+                Thumbnail Image
               </label>
-              <input
-                type="url"
-                id="thumbnail_url"
-                name="thumbnail_url"
-                value={formData.thumbnail_url}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                placeholder="https://example.com/thumbnail.jpg"
-              />
+              
+              {!thumbnailPreview ? (
+                <div className="border-2 border-dashed border-[var(--border)] rounded-lg p-6 text-center hover:border-[var(--accent)] transition-colors">
+                  <input
+                    type="file"
+                    id="thumbnail"
+                    name="thumbnail"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="thumbnail"
+                    className="cursor-pointer block"
+                  >
+                    <div className="text-[var(--secondary)] apple-text-small mb-2">
+                      Click to upload or drag and drop
+                    </div>
+                    <div className="text-[var(--tertiary)] apple-text-caption">
+                      PNG, JPG, GIF up to 5MB
+                    </div>
+                  </label>
+                </div>
+              ) : (
+                <div className="relative">
+                  <img
+                    src={thumbnailPreview}
+                    alt="Thumbnail preview"
+                    className="w-full h-48 object-cover rounded-lg border border-[var(--border)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeThumbnail}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              
+              {/* Fallback URL input */}
+              <div className="mt-3">
+                <label htmlFor="thumbnail_url" className="block apple-text-small font-medium text-[var(--tertiary)] mb-2">
+                  Or provide image URL instead
+                </label>
+                <input
+                  type="url"
+                  id="thumbnail_url"
+                  name="thumbnail_url"
+                  value={formData.thumbnail_url}
+                  onChange={handleInputChange}
+                  disabled={!!thumbnailFile}
+                  className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="https://example.com/thumbnail.jpg"
+                />
+              </div>
             </div>
 
             {/* Submit Button */}

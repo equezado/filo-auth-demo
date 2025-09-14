@@ -233,7 +233,7 @@ export default function Feeds() {
         {/* Category Filter for Publishers */}
         {isPublisher() && (
           <div className="mb-8">
-            <div className="max-w-[720px] mx-auto">
+            <div className="max-w-[560px] mx-auto">
               <label htmlFor="category-filter" className="block apple-text-small font-medium text-[var(--foreground)] mb-2">
                 Filter by Category (Optional)
               </label>
@@ -256,7 +256,7 @@ export default function Feeds() {
 
         {/* Posts Count for Publishers */}
         {isPublisher() && !loadingPosts && posts.length > 0 && (
-          <div className="max-w-[720px] mx-auto mb-6">
+          <div className="max-w-[560px] mx-auto mb-6">
             <div className="apple-text-caption text-[var(--secondary)]">
               Showing {posts.length} post{posts.length !== 1 ? 's' : ''}
               {selectedCategory && ` in ${categoryNames[selectedCategory] || selectedCategory} category`}
@@ -298,7 +298,7 @@ export default function Feeds() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 max-w-[720px] mx-auto">
+          <div className="grid grid-cols-1 gap-8 max-w-[560px] mx-auto">
             {posts.map((post) => (
               <div key={post.id} className="apple-card overflow-hidden group cursor-pointer">
                 {/* Thumbnail */}
