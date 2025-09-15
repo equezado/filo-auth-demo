@@ -127,8 +127,8 @@ export default function Categories() {
 
   if (authLoading || checkingOnboarding) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div className="text-xl" style={{ color: 'var(--foreground)' }}>Loading...</div>
       </div>
     )
   }
@@ -138,13 +138,13 @@ export default function Categories() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8" style={{ background: 'var(--background)' }}>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+          <h1 className="text-3xl font-extrabold sm:text-4xl" style={{ color: 'var(--foreground)' }}>
             Select two areas you feel more investment now?
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg" style={{ color: 'var(--secondary)' }}>
             Choose the two categories that resonate most with your current goals and interests.
           </p>
         </div>
@@ -155,23 +155,27 @@ export default function Categories() {
               key={category.id}
               className={`relative p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                 selectedCategories.includes(category.id)
-                  ? 'border-indigo-500 bg-indigo-50 shadow-md'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                  ? 'shadow-md'
+                  : 'hover:shadow-sm'
               }`}
+              style={{
+                borderColor: selectedCategories.includes(category.id) ? 'var(--accent)' : 'var(--border)',
+                backgroundColor: selectedCategories.includes(category.id) ? 'var(--tertiary)' : 'var(--background-secondary)'
+              }}
               onClick={() => handleCategoryToggle(category.id)}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                     {category.name}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm" style={{ color: 'var(--secondary)' }}>
                     {category.description}
                   </p>
                 </div>
                 {selectedCategories.includes(category.id) && (
                   <div className="ml-4 flex-shrink-0">
-                    <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--accent)' }}>
                       <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -185,13 +189,13 @@ export default function Categories() {
 
         {error && (
           <div className="text-center mb-6">
-            <p className="text-red-600 text-sm">{error}</p>
+            <p className="text-sm" style={{ color: 'var(--accent)' }}>{error}</p>
           </div>
         )}
 
         <div className="text-center">
           <div className="mb-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm" style={{ color: 'var(--secondary)' }}>
               Selected: {selectedCategories.length}/2 categories
             </p>
           </div>
@@ -199,7 +203,7 @@ export default function Categories() {
           <button
             onClick={handleContinue}
             disabled={selectedCategories.length !== 2 || loading}
-            className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="apple-button px-8 py-4 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Saving...' : 'Continue'}
           </button>

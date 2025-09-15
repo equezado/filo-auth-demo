@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Tabs Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Multiple Tabs Loading Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Instructions</h2>
+        <ol>
+            <li>Open your app in the first tab and sign in</li>
+            <li>Click "Open New Tab" below to open a second tab</li>
+            <li>Both tabs should load properly without getting stuck</li>
+            <li>Try refreshing both tabs to test session persistence</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Quick Actions</h2>
+        <button class="button" onclick="openNewTab()">Open New Tab</button>
+        <button class="button" onclick="clearStorage()">Clear Storage</button>
+        <button class="button" onclick="checkStorage()">Check Storage</button>
+        <button class="button" onclick="refreshAllTabs()">Refresh All Tabs</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Status</h2>
+        <div id="status" class="status info">Ready to test</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Storage Info</h2>
+        <div id="storage-info">Click "Check Storage" to see current storage state</div>
+    </div>
+
+    <script>
+        function openNewTab() {
+            const url = window.location.origin;
+            window.open(url, '_blank');
+            updateStatus('New tab opened. Check if it loads properly.', 'info');
+        }
+
+        function clearStorage() {
+            // Clear all Supabase-related storage
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('sb-'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            // Clear sessionStorage too
+            const sessionKeysToRemove = [];
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('sb-'))) {
+                    sessionKeysToRemove.push(key);
+                }
+            }
+            
+            sessionKeysToRemove.forEach(key => {
+                sessionStorage.removeItem(key);
+            });
+            
+            updateStatus(`Cleared ${keysToRemove.length + sessionKeysToRemove.length} storage items`, 'success');
+            checkStorage();
+        }
+
+        function checkStorage() {
+            const storageItems = [];
+            
+            // Check localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('sb-'))) {
+                    storageItems.push(`localStorage: ${key}`);
+                }
+            }
+            
+            // Check sessionStorage
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('sb-'))) {
+                    storageItems.push(`sessionStorage: ${key}`);
+                }
+            }
+            
+            const storageInfo = document.getElementById('storage-info');
+            if (storageItems.length === 0) {
+                storageInfo.innerHTML = '<em>No Supabase storage items found</em>';
+            } else {
+                storageInfo.innerHTML = storageItems.map(item => `<div>${item}</div>`).join('');
+            }
+        }
+
+        function refreshAllTabs() {
+            // This will only refresh the current tab, but you can manually refresh others
+            window.location.reload();
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        // Check storage on page load
+        checkStorage();
+    </script>
+</body>
+</html>

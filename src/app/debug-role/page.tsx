@@ -13,7 +13,14 @@ export default function DebugRole() {
   }, [user, loading, debugUserRole])
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div className="text-center">
+          <div className="text-xl mb-4" style={{ color: 'var(--foreground)' }}>Loading...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto" style={{ borderColor: 'var(--accent)' }}></div>
+        </div>
+      </div>
+    )
   }
 
   return (

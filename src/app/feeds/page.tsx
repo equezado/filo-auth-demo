@@ -164,8 +164,11 @@ export default function Feeds() {
 
   if (loading || preferencesLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <div className="apple-text-medium text-[var(--secondary)]">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
+        <div className="text-center">
+          <div className="text-xl mb-4" style={{ color: 'var(--foreground)' }}>Loading...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto" style={{ borderColor: 'var(--accent)' }}></div>
+        </div>
       </div>
     )
   }
@@ -267,7 +270,10 @@ export default function Feeds() {
         {/* Posts Grid */}
         {loadingPosts ? (
           <div className="flex items-center justify-center py-16">
-            <div className="apple-text-medium text-[var(--secondary)]">Loading posts...</div>
+            <div className="text-center">
+              <div className="text-xl mb-4" style={{ color: 'var(--foreground)' }}>Loading posts...</div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto" style={{ borderColor: 'var(--accent)' }}></div>
+            </div>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-16">
