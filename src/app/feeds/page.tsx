@@ -37,7 +37,7 @@ const categoryNames: Record<string, string> = {
 }
 
 export default function Feeds() {
-  const { user, loading, signOut, isPublisher } = useAuth()
+  const { user, loading, signOut, isPublisher, error: authError, clearError, clearAuthData } = useAuth()
   const router = useRouter()
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
@@ -45,6 +45,8 @@ export default function Feeds() {
   const [preferencesLoading, setPreferencesLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [categories, setCategories] = useState<Category[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -52,22 +54,34 @@ export default function Feeds() {
     }
   }, [user, loading, router])
 
+  // Clear auth errors when component mounts
+  useEffect(() => {
+    if (authError) {
+      clearError()
+    }
+  }, [authError, clearError])
+
   useEffect(() => {
     const fetchUserPreferences = async () => {
       if (user) {
         try {
+          setError(null)
           const preferences = await getUserPreferences(user.id)
           setUserPreferences(preferences)
         } catch (error) {
           console.error('Error fetching user preferences:', error)
+          setError('Failed to load user preferences. Please try refreshing the page.')
         } finally {
           setPreferencesLoading(false)
         }
+      } else {
+        setPreferencesLoading(false)
       }
     }
 
     const fetchCategories = async () => {
       try {
+        setError(null)
         const supabase = createClient()
         const { data, error } = await supabase
           .from('categories')
@@ -76,24 +90,31 @@ export default function Feeds() {
 
         if (error) {
           console.error('Error fetching categories:', error)
+          setError('Failed to load categories. Please try refreshing the page.')
         } else {
           setCategories(data || [])
         }
       } catch (error) {
         console.error('Error fetching categories:', error)
+        setError('Network error loading categories. Please check your connection.')
       }
     }
 
-    fetchUserPreferences()
-    fetchCategories()
+    if (user) {
+      fetchUserPreferences()
+      fetchCategories()
+    }
   }, [user])
 
   useEffect(() => {
     const fetchPosts = async () => {
-      // Publishers see all posts (with optional category filter), readers see only their selected categories
-      if (isPublisher()) {
-        // Fetch all posts for publishers, optionally filtered by category
-        try {
+      try {
+        setError(null)
+        setLoadingPosts(true)
+        
+        // Publishers see all posts (with optional category filter), readers see only their selected categories
+        if (isPublisher()) {
+          // Fetch all posts for publishers, optionally filtered by category
           const supabase = createClient()
           let query = supabase
             .from('posts')
@@ -109,22 +130,18 @@ export default function Feeds() {
 
           if (error) {
             console.error('Error fetching posts:', error)
+            setError('Failed to load posts. Please try refreshing the page.')
+            setPosts([])
           } else {
             setPosts(data || [])
           }
-        } catch (error) {
-          console.error('Error fetching posts:', error)
-        } finally {
-          setLoadingPosts(false)
-        }
-      } else {
-        // Regular readers see only their selected categories
-        if (!userPreferences || userPreferences.selected_categories.length === 0) {
-          setLoadingPosts(false)
-          return
-        }
+        } else {
+          // Regular readers see only their selected categories
+          if (!userPreferences || userPreferences.selected_categories.length === 0) {
+            setPosts([])
+            return
+          }
 
-        try {
           const supabase = createClient()
           
           // Fetch posts from all user-selected categories
@@ -136,21 +153,46 @@ export default function Feeds() {
 
           if (error) {
             console.error('Error fetching posts:', error)
+            setError('Failed to load posts. Please try refreshing the page.')
+            setPosts([])
           } else {
             setPosts(data || [])
           }
-        } catch (error) {
-          console.error('Error fetching posts:', error)
-        } finally {
-          setLoadingPosts(false)
         }
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+        setError('Network error loading posts. Please check your connection.')
+        setPosts([])
+      } finally {
+        setLoadingPosts(false)
       }
     }
 
-    if (isPublisher() || !preferencesLoading) {
+    // Only fetch posts if we have the necessary data
+    if (isPublisher() || (!preferencesLoading && userPreferences !== null)) {
       fetchPosts()
     }
   }, [userPreferences, preferencesLoading, isPublisher, selectedCategory])
+
+  // Retry function for failed requests
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1)
+    setError(null)
+    setLoadingPosts(true)
+    setPreferencesLoading(true)
+  }
+
+  // Handle refresh token errors by clearing auth data
+  const handleRefreshTokenError = async () => {
+    try {
+      await clearAuthData()
+      router.push('/signin')
+    } catch (error) {
+      console.error('Error clearing auth data:', error)
+      // Force page reload as fallback
+      window.location.href = '/signin'
+    }
+  }
 
   const handleSignOut = async () => {
     try {
@@ -162,7 +204,7 @@ export default function Feeds() {
   }
 
 
-  if (loading || preferencesLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
         <div className="text-center">
@@ -175,6 +217,54 @@ export default function Feeds() {
 
   if (!user) {
     return null
+  }
+
+  // Show error state with retry option
+  if (error) {
+    const isRefreshTokenError = error.includes('session has expired') || 
+                               error.includes('Invalid Refresh Token') || 
+                               error.includes('Refresh Token Not Found')
+    
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h1 className="apple-text-large text-[var(--foreground)] mb-2">
+            {isRefreshTokenError ? 'Session Expired' : 'Something went wrong'}
+          </h1>
+          <p className="apple-text-small text-[var(--secondary)] mb-6">{error}</p>
+          <div className="flex gap-3 justify-center">
+            {isRefreshTokenError ? (
+              <button
+                onClick={handleRefreshTokenError}
+                className="apple-button"
+              >
+                Sign In Again
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleRetry}
+                  className="apple-button"
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="apple-button-secondary"
+                >
+                  Refresh Page
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Only show category selection message for readers, not publishers
@@ -268,10 +358,12 @@ export default function Feeds() {
         )}
 
         {/* Posts Grid */}
-        {loadingPosts ? (
+        {loadingPosts || preferencesLoading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
-              <div className="text-xl mb-4" style={{ color: 'var(--foreground)' }}>Loading posts...</div>
+              <div className="text-xl mb-4" style={{ color: 'var(--foreground)' }}>
+                {preferencesLoading ? 'Loading preferences...' : 'Loading posts...'}
+              </div>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto" style={{ borderColor: 'var(--accent)' }}></div>
             </div>
           </div>

@@ -25,7 +25,7 @@ const categoryNames: Record<string, string> = {
 }
 
 export default function CreatePost() {
-  const { user, loading, isPublisher, signOut } = useAuth()
+  const { user, loading, isPublisher, signOut, error: authError, clearError } = useAuth()
   const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [formData, setFormData] = useState({
@@ -40,6 +40,8 @@ export default function CreatePost() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -56,6 +58,8 @@ export default function CreatePost() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        setError('')
+        setCategoriesLoading(true)
         const supabase = createClient()
         const { data, error } = await supabase
           .from('categories')
@@ -64,11 +68,15 @@ export default function CreatePost() {
 
         if (error) {
           console.error('Error fetching categories:', error)
+          setError('Failed to load categories. Please try refreshing the page.')
         } else {
           setCategories(data || [])
         }
       } catch (error) {
         console.error('Error fetching categories:', error)
+        setError('Network error loading categories. Please check your connection.')
+      } finally {
+        setCategoriesLoading(false)
       }
     }
 
@@ -76,6 +84,20 @@ export default function CreatePost() {
       fetchCategories()
     }
   }, [user, isPublisher])
+
+  // Clear auth errors when component mounts
+  useEffect(() => {
+    if (authError) {
+      clearError()
+    }
+  }, [authError, clearError])
+
+  // Retry function for failed requests
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1)
+    setError('')
+    setCategoriesLoading(true)
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -236,6 +258,37 @@ export default function CreatePost() {
     return null
   }
 
+  // Show error state with retry option
+  if (error && !categoriesLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h1 className="apple-text-large text-[var(--foreground)] mb-2">Something went wrong</h1>
+          <p className="apple-text-small text-[var(--secondary)] mb-6">{error}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={handleRetry}
+              className="apple-button"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="apple-button-secondary"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       {/* Header */}
@@ -304,21 +357,28 @@ export default function CreatePost() {
               <label htmlFor="category_id" className="block apple-text-small font-medium text-[var(--foreground)] mb-2">
                 Category *
               </label>
-              <select
-                id="category_id"
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {categoryNames[category.id] || category.name}
-                  </option>
-                ))}
-              </select>
+              {categoriesLoading ? (
+                <div className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+                  Loading categories...
+                </div>
+              ) : (
+                <select
+                  id="category_id"
+                  name="category_id"
+                  value={formData.category_id}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 border border-[var(--border)] rounded-lg apple-text-small text-[var(--foreground)] bg-[var(--background)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {categoryNames[category.id] || category.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {/* Author Selection */}
