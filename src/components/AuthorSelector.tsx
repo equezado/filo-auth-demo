@@ -22,7 +22,7 @@ export default function AuthorSelector({
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [retryCount, setRetryCount] = useState(0)
+  const [, setRetryCount] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -61,7 +61,7 @@ export default function AuthorSelector({
   // Fetch authors on component mount
   useEffect(() => {
     fetchAuthors()
-  }, [])
+  }, [fetchAuthors])
 
   // Retry function
   const handleRetry = () => {

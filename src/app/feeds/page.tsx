@@ -46,7 +46,7 @@ export default function Feeds() {
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [categories, setCategories] = useState<Category[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
+  const [, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -273,7 +273,7 @@ export default function Feeds() {
     if (isPublisher() || (!preferencesLoading && userPreferences !== null)) {
       fetchPosts()
     }
-  }, [userPreferences, preferencesLoading, isPublisher, selectedCategory])
+  }, [userPreferences, preferencesLoading, isPublisher, selectedCategory, clearAuthData, router])
 
   // Retry function for failed requests
   const handleRetry = () => {

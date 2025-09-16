@@ -41,7 +41,7 @@ export default function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [categoriesLoading, setCategoriesLoading] = useState(true)
-  const [retryCount, setRetryCount] = useState(0)
+  const [, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) {

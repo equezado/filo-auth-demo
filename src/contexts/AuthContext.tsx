@@ -221,7 +221,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true
-    let timeoutId: NodeJS.Timeout
 
     // Initialize auth with fallback approach
     const initializeAuth = async () => {
@@ -238,10 +237,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTimeout(() => reject(new Error('Auth initialization timeout')), 2000)
           )
           
-          const result = await Promise.race([initPromise, timeoutPromise]) as any
+          const result = await Promise.race([initPromise, timeoutPromise]) as { data: { session: Session | null }, error: any }
           session = result.data.session
           sessionError = result.error
-        } catch (timeoutError) {
+        } catch {
           console.log('Session fetch timed out, proceeding with fallback')
           // Continue without session - let the auth state change handler deal with it
         }
@@ -295,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Set a fallback timeout
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (mounted && loading) {
         console.log('Auth initialization fallback timeout triggered - forcing error state')
         setError('Loading timeout. Please refresh the page.')
