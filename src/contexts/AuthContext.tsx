@@ -31,7 +31,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
-  // Function to validate session
+  // Function to clear all auth data and force a clean state
+  const clearAuthData = useCallback(async () => {
+    try {
+      // Clear Supabase session
+      await supabase.auth.signOut()
+      
+      // Clear any cached auth data from localStorage
+      const keysToRemove = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (key.includes('supabase') || key.includes('auth'))) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key))
+      
+      // Reset state
+      setUser(null)
+      setUserRole(null)
+      setError(null)
+      setLoading(false)
+      
+      console.log('Auth data cleared successfully')
+    } catch (error) {
+      console.error('Error clearing auth data:', error)
+    }
+  }, [supabase])
+
+  // Function to validate session with timeout
   const validateSession = useCallback(async (session: Session | null): Promise<boolean> => {
     if (!session) return false
     
@@ -44,8 +72,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false
       }
       
-      // Verify session is still valid by making a test request
-      const { error } = await supabase.auth.getUser()
+      // Verify session is still valid by making a test request with timeout
+      const validationPromise = supabase.auth.getUser()
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Session validation timeout')), 10000)
+      )
+      
+      const { error } = await Promise.race([validationPromise, timeoutPromise]) as any
+      
       if (error) {
         // Handle specific refresh token errors
         if (error.message.includes('Invalid Refresh Token') || 
@@ -64,6 +98,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true
     } catch (error) {
       console.error('Error validating session:', error)
+      
+      // Handle timeout errors
+      if (error instanceof Error && error.message.includes('timeout')) {
+        console.log('Session validation timed out, clearing session')
+        setError('Connection timeout. Please sign in again.')
+        await clearAuthData()
+        return false
+      }
+      
       // If it's a refresh token error, clear the session
       if (error instanceof Error && 
           (error.message.includes('Invalid Refresh Token') || 
@@ -73,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       return false
     }
-  }, [supabase])
+  }, [supabase, clearAuthData])
 
   // Function to fetch user role with retry logic and better error handling
   const fetchUserRole = useCallback(async (userId: string, retries = 3): Promise<UserRole | null> => {
@@ -208,7 +251,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Error getting initial session:', error)
-          setError('Failed to load session. Please try signing in again.')
+          
+          // Handle specific refresh token errors during initial load
+          if (error.message.includes('Invalid Refresh Token') || 
+              error.message.includes('Refresh Token Not Found') ||
+              error.message.includes('refresh_token_not_found')) {
+            console.log('Refresh token invalid during initial load, clearing session')
+            setError('Your session has expired. Please sign in again.')
+            // Clear auth data completely
+            await clearAuthData()
+          } else {
+            setError('Failed to load session. Please try signing in again.')
+          }
+          
+          if (mounted) {
+            setUser(null)
+            setUserRole(null)
+            setLoading(false)
+          }
+          return
+        }
+
+        // If no session, set loading to false immediately
+        if (!session) {
           if (mounted) {
             setUser(null)
             setUserRole(null)
@@ -220,7 +285,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await handleAuthStateChange('INITIAL_SESSION', session)
       } catch (error) {
         console.error('Error initializing auth:', error)
-        setError('Failed to initialize authentication. Please refresh the page.')
+        
+        // Handle refresh token errors in catch block too
+        if (error instanceof Error && 
+            (error.message.includes('Invalid Refresh Token') || 
+             error.message.includes('Refresh Token Not Found'))) {
+          console.log('Refresh token error during initialization, clearing session')
+          setError('Your session has expired. Please sign in again.')
+          await clearAuthData()
+        } else {
+          setError('Failed to initialize authentication. Please refresh the page.')
+        }
+        
         if (mounted) {
           setUser(null)
           setUserRole(null)
@@ -238,7 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [supabase.auth, handleAuthStateChange])
+  }, [supabase.auth, handleAuthStateChange, clearAuthData])
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -325,34 +401,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearError = () => {
     setError(null)
   }
-
-  // Function to clear all auth data and force a clean state
-  const clearAuthData = useCallback(async () => {
-    try {
-      // Clear Supabase session
-      await supabase.auth.signOut()
-      
-      // Clear any cached auth data from localStorage
-      const keysToRemove = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && (key.includes('supabase') || key.includes('auth'))) {
-          keysToRemove.push(key)
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key))
-      
-      // Reset state
-      setUser(null)
-      setUserRole(null)
-      setError(null)
-      setLoading(false)
-      
-      console.log('Auth data cleared successfully')
-    } catch (error) {
-      console.error('Error clearing auth data:', error)
-    }
-  }, [supabase])
 
   // Debug function to check user role status
   const debugUserRole = async () => {

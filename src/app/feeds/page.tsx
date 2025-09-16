@@ -54,6 +54,20 @@ export default function Feeds() {
     }
   }, [user, loading, router])
 
+  // Fallback timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log('Auth loading timeout, forcing error state')
+        setError('Loading timeout. Please refresh the page or sign in again.')
+        setLoadingPosts(false)
+        setPreferencesLoading(false)
+      }
+    }, 15000) // 15 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [loading])
+
   // Clear auth errors when component mounts
   useEffect(() => {
     if (authError) {
@@ -70,7 +84,22 @@ export default function Feeds() {
           setUserPreferences(preferences)
         } catch (error) {
           console.error('Error fetching user preferences:', error)
-          setError('Failed to load user preferences. Please try refreshing the page.')
+          
+          // Check for auth-related errors
+          if (error instanceof Error && 
+              (error.message.includes('Invalid Refresh Token') || 
+               error.message.includes('Refresh Token Not Found') ||
+               error.message.includes('JWT') ||
+               error.message.includes('unauthorized'))) {
+            setError('Your session has expired. Please sign in again.')
+            // Clear auth data and redirect
+            setTimeout(() => {
+              clearAuthData()
+              router.push('/signin')
+            }, 2000)
+          } else {
+            setError('Failed to load user preferences. Please try refreshing the page.')
+          }
         } finally {
           setPreferencesLoading(false)
         }
@@ -90,13 +119,42 @@ export default function Feeds() {
 
         if (error) {
           console.error('Error fetching categories:', error)
-          setError('Failed to load categories. Please try refreshing the page.')
+          
+          // Check for auth-related errors
+          if (error.message.includes('Invalid Refresh Token') || 
+              error.message.includes('Refresh Token Not Found') ||
+              error.message.includes('JWT') ||
+              error.message.includes('unauthorized')) {
+            setError('Your session has expired. Please sign in again.')
+            // Clear auth data and redirect
+            setTimeout(() => {
+              clearAuthData()
+              router.push('/signin')
+            }, 2000)
+          } else {
+            setError('Failed to load categories. Please try refreshing the page.')
+          }
         } else {
           setCategories(data || [])
         }
       } catch (error) {
         console.error('Error fetching categories:', error)
-        setError('Network error loading categories. Please check your connection.')
+        
+        // Check for auth-related errors
+        if (error instanceof Error && 
+            (error.message.includes('Invalid Refresh Token') || 
+             error.message.includes('Refresh Token Not Found') ||
+             error.message.includes('JWT') ||
+             error.message.includes('unauthorized'))) {
+          setError('Your session has expired. Please sign in again.')
+          // Clear auth data and redirect
+          setTimeout(() => {
+            clearAuthData()
+            router.push('/signin')
+          }, 2000)
+        } else {
+          setError('Network error loading categories. Please check your connection.')
+        }
       }
     }
 
@@ -104,7 +162,7 @@ export default function Feeds() {
       fetchUserPreferences()
       fetchCategories()
     }
-  }, [user])
+  }, [user, clearAuthData, router])
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -130,7 +188,21 @@ export default function Feeds() {
 
           if (error) {
             console.error('Error fetching posts:', error)
-            setError('Failed to load posts. Please try refreshing the page.')
+            
+            // Check for auth-related errors
+            if (error.message.includes('Invalid Refresh Token') || 
+                error.message.includes('Refresh Token Not Found') ||
+                error.message.includes('JWT') ||
+                error.message.includes('unauthorized')) {
+              setError('Your session has expired. Please sign in again.')
+              // Clear auth data and redirect
+              setTimeout(() => {
+                clearAuthData()
+                router.push('/signin')
+              }, 2000)
+            } else {
+              setError('Failed to load posts. Please try refreshing the page.')
+            }
             setPosts([])
           } else {
             setPosts(data || [])
@@ -153,7 +225,21 @@ export default function Feeds() {
 
           if (error) {
             console.error('Error fetching posts:', error)
-            setError('Failed to load posts. Please try refreshing the page.')
+            
+            // Check for auth-related errors
+            if (error.message.includes('Invalid Refresh Token') || 
+                error.message.includes('Refresh Token Not Found') ||
+                error.message.includes('JWT') ||
+                error.message.includes('unauthorized')) {
+              setError('Your session has expired. Please sign in again.')
+              // Clear auth data and redirect
+              setTimeout(() => {
+                clearAuthData()
+                router.push('/signin')
+              }, 2000)
+            } else {
+              setError('Failed to load posts. Please try refreshing the page.')
+            }
             setPosts([])
           } else {
             setPosts(data || [])
@@ -161,7 +247,22 @@ export default function Feeds() {
         }
       } catch (error) {
         console.error('Error fetching posts:', error)
-        setError('Network error loading posts. Please check your connection.')
+        
+        // Check for auth-related errors
+        if (error instanceof Error && 
+            (error.message.includes('Invalid Refresh Token') || 
+             error.message.includes('Refresh Token Not Found') ||
+             error.message.includes('JWT') ||
+             error.message.includes('unauthorized'))) {
+          setError('Your session has expired. Please sign in again.')
+          // Clear auth data and redirect
+          setTimeout(() => {
+            clearAuthData()
+            router.push('/signin')
+          }, 2000)
+        } else {
+          setError('Network error loading posts. Please check your connection.')
+        }
         setPosts([])
       } finally {
         setLoadingPosts(false)
