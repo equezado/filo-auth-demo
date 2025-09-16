@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Author } from '@/types/author'
 import { createClient } from '@/lib/supabase'
 
@@ -27,7 +27,7 @@ export default function AuthorSelector({
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Fetch authors from database with retry logic
-  const fetchAuthors = async (retries = 3) => {
+  const fetchAuthors = useCallback(async (retries = 3) => {
     try {
       setLoading(true)
       setError('')
@@ -56,7 +56,7 @@ export default function AuthorSelector({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // Fetch authors on component mount
   useEffect(() => {

@@ -237,7 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTimeout(() => reject(new Error('Auth initialization timeout')), 2000)
           )
           
-          const result = await Promise.race([initPromise, timeoutPromise]) as { data: { session: Session | null }, error: any }
+          const result = await Promise.race([initPromise, timeoutPromise]) as { data: { session: Session | null }, error: Error | null }
           session = result.data.session
           sessionError = result.error
         } catch {
